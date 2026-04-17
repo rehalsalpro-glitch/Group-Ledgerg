@@ -28,6 +28,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ── Base (light) ─────────────────────────────────── */
 :root {
   --background: 240 10% 97%;
   --foreground: 240 10% 10%;
@@ -48,6 +49,34 @@
   --destructive-foreground: 0 0% 100%;
   --app-font-sans: 'Inter', system-ui, sans-serif;
   --radius: 0.75rem;
+}
+
+/* ── Dark mode ────────────────────────────────────── */
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 30% 93%;
+  --border: 220 20% 22%;
+  --input: 220 20% 22%;
+  --card: 222 47% 15%;
+  --card-foreground: 210 30% 93%;
+  --secondary: 220 20% 20%;
+  --secondary-foreground: 210 30% 80%;
+  --muted: 220 20% 18%;
+  --muted-foreground: 215 15% 58%;
+}
+
+/* ── Theme: Blue ──────────────────────────────────── */
+[data-theme="blue"] {
+  --primary: 217 91% 55%;
+  --ring: 217 91% 55%;
+  --accent: 217 80% 92%;
+}
+
+/* ── Theme: Dark (slate) ──────────────────────────── */
+[data-theme="dark"] {
+  --primary: 225 30% 35%;
+  --ring: 225 30% 35%;
+  --accent: 225 30% 88%;
 }
 
 @layer base {
@@ -77,9 +106,9 @@ html, body {
 }
 
 @keyframes pop-in {
-  0% { transform: scale(0.85); opacity: 0; }
-  60% { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
 }
 
 .animate-pop-in {

@@ -1,14 +1,15 @@
-import { IndianRupee, ArrowRight, CheckCircle2, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, TrendingUp } from "lucide-react";
 import type { Group, Settlement, Expense } from "../store";
 
 interface Props {
   group: Group | null;
   settlements: Settlement[];
   expenses: Expense[];
+  currencySymbol: string;
   getMemberName: (groupId: string, memberId: string) => string;
 }
 
-export default function ResultPage({ group, settlements, expenses, getMemberName }: Props) {
+export default function ResultPage({ group, settlements, expenses, currencySymbol, getMemberName }: Props) {
   if (!group) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-8">
@@ -20,6 +21,8 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
       </div>
     );
   }
+
+  const fmt = (n: number) => `${currencySymbol}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const perPerson = group.members.length > 0 ? total / group.members.length : 0;
@@ -41,13 +44,13 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
         <div className="bg-gradient-to-br from-primary to-emerald-700 rounded-2xl p-4 text-white shadow-lg">
           <p className="text-xs font-medium opacity-75 mb-1">Total Expenses</p>
           <div className="flex items-baseline gap-0.5 mb-3">
-            <span className="text-lg font-semibold opacity-80">₹</span>
+            <span className="text-lg font-semibold opacity-80">{currencySymbol}</span>
             <span className="text-3xl font-bold">{total.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs opacity-70">Per person</p>
-              <p className="text-sm font-bold">₹{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
+              <p className="text-sm font-bold">{fmt(perPerson)}</p>
             </div>
             <div>
               <p className="text-xs opacity-70">Members</p>
@@ -76,13 +79,13 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
                 </div>
                 <span className="flex-1 text-sm font-medium truncate">{m.name}</span>
                 <div className="text-right">
-                  <p className="text-sm font-bold">₹{paid.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
+                  <p className="text-sm font-bold">{fmt(paid)}</p>
                   <p className={`text-xs font-medium ${isAhead ? "text-primary" : "text-destructive"}`}>
                     {Math.abs(diff) < 0.005
                       ? "settled"
                       : isAhead
-                        ? `+₹${diff.toFixed(2)} ahead`
-                        : `-₹${Math.abs(diff).toFixed(2)} behind`}
+                        ? `+${fmt(diff)} ahead`
+                        : `-${fmt(Math.abs(diff))} behind`}
                   </p>
                 </div>
               </div>
@@ -117,9 +120,7 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
                   </div>
                   <p className="text-xs text-muted-foreground">needs to pay</p>
                 </div>
-                <p className="text-base font-bold text-primary flex-shrink-0">
-                  ₹{s.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                </p>
+                <p className="text-base font-bold text-primary flex-shrink-0">{fmt(s.amount)}</p>
               </div>
             ))}
           </div>

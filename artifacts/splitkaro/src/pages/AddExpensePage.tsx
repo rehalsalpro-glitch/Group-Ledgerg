@@ -5,12 +5,13 @@ import type { Group, Expense } from "../store";
 interface Props {
   group: Group | null;
   expenses: Expense[];
+  currencySymbol: string;
   onAdd: (title: string, amount: number, paidBy: string) => void;
   onDelete: (id: string) => void;
   getMemberName: (groupId: string, memberId: string) => string;
 }
 
-export default function AddExpensePage({ group, expenses, onAdd, onDelete, getMemberName }: Props) {
+export default function AddExpensePage({ group, expenses, currencySymbol, onAdd, onDelete, getMemberName }: Props) {
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState(group?.members[0]?.id ?? "");
@@ -47,11 +48,11 @@ export default function AddExpensePage({ group, expenses, onAdd, onDelete, getMe
         <div>
           <p className="text-sm font-semibold text-foreground">{group.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {group.members.length} members · ₹{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })} each
+            {group.members.length} members · {currencySymbol}{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })} each
           </p>
         </div>
         <div className="flex items-center gap-1 bg-primary/10 text-primary text-sm font-bold px-3 py-1.5 rounded-full">
-          <IndianRupee size={13} />
+          <span className="text-xs">{currencySymbol}</span>
           <span>{total.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
         </div>
       </div>
@@ -68,11 +69,11 @@ export default function AddExpensePage({ group, expenses, onAdd, onDelete, getMe
             onKeyDown={e => { if (e.key === "Enter") handleAdd(); }}
           />
           <div className="relative mb-3">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">₹</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">{currencySymbol}</span>
             <input
               type="number"
               inputMode="decimal"
-              className="w-full border border-border rounded-xl pl-7 pr-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
+              className="w-full border border-border rounded-xl pl-8 pr-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
               placeholder="Amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
@@ -130,11 +131,9 @@ export default function AddExpensePage({ group, expenses, onAdd, onDelete, getMe
                 </p>
               </div>
               <div className="text-right ml-2 flex items-center gap-2">
-                <div>
-                  <p className="text-sm font-bold text-primary">
-                    ₹{exp.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                  </p>
-                </div>
+                <p className="text-sm font-bold text-primary">
+                  {currencySymbol}{exp.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                </p>
                 <button
                   onClick={() => onDelete(exp.id)}
                   className="p-1.5 rounded-lg bg-destructive/10 active:scale-95 transition-transform"
