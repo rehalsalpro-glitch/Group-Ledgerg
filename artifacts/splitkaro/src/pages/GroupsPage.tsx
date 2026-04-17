@@ -10,10 +10,18 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
+interface MemberEntry {
+  key: string;
+  name: string;
+}
+
+let counter = 0;
+function mkKey() { return `m-${++counter}-${Date.now()}`; }
+
 export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, onDelete }: Props) {
   const [creating, setCreating] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [members, setMembers] = useState<string[]>([]);
+  const [members, setMembers] = useState<MemberEntry[]>([]);
   const [memberInput, setMemberInput] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const memberInputRef = useRef<HTMLInputElement>(null);
@@ -21,18 +29,18 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
   function handleAddMember() {
     const name = memberInput.trim();
     if (!name) return;
-    setMembers(prev => [...prev, name]);
+    setMembers(prev => [...prev, { key: mkKey(), name }]);
     setMemberInput("");
     memberInputRef.current?.focus();
   }
 
-  function handleRemoveMember(index: number) {
-    setMembers(prev => prev.filter((_, i) => i !== index));
+  function handleRemoveMember(key: string) {
+    setMembers(prev => prev.filter(m => m.key !== key));
   }
 
   function handleCreate() {
     if (!groupName.trim() || members.length < 2) return;
-    onCreate(groupName.trim(), members);
+    onCreate(groupName.trim(), members.map(m => m.name));
     setGroupName("");
     setMembers([]);
     setMemberInput("");
@@ -45,6 +53,8 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
     setMembers([]);
     setMemberInput("");
   }
+
+  const needed = Math.max(0, 2 - members.length);
 
   return (
     <div className="flex flex-col h-full">
@@ -59,21 +69,22 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
       </div>
 
       {creating && (
-        <div className="mx-4 mb-3 p-3 rounded-2xl bg-card border border-border shadow-sm max-w-[92%]">
-          <p className="text-sm font-semibold mb-2">Create a new group</p>
+        <div className="mx-4 mb-3 p-4 rounded-2xl bg-card border border-border shadow-sm">
+          <p className="text-sm font-semibold mb-3 text-foreground">Create a new group</p>
 
           <input
             autoFocus
-            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-2 bg-background outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Group name"
+            className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-2.5 bg-background outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Group name (e.g. Goa Trip)"
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") memberInputRef.current?.focus(); }}
           />
 
           <div className="flex gap-2 mb-2">
             <input
               ref={memberInputRef}
-              className="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 border border-border rounded-xl px-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter member name"
               value={memberInput}
               onChange={e => setMemberInput(e.target.value)}
@@ -82,23 +93,23 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             <button
               onClick={handleAddMember}
               disabled={!memberInput.trim()}
-              className="flex items-center gap-1 bg-primary/10 text-primary text-sm font-semibold px-3 py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3.5 py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
             >
               <UserPlus size={14} /> Add
             </button>
           </div>
 
           {members.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {members.map((name, i) => (
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              {members.map(m => (
                 <span
-                  key={i}
-                  className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded-full"
+                  key={m.key}
+                  className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 rounded-full"
                 >
-                  {name}
+                  {m.name}
                   <button
-                    onClick={() => handleRemoveMember(i)}
-                    className="ml-0.5 hover:text-destructive transition-colors"
+                    onClick={() => handleRemoveMember(m.key)}
+                    className="ml-0.5 opacity-60 hover:opacity-100 hover:text-destructive transition-all"
                   >
                     <X size={11} strokeWidth={2.5} />
                   </button>
@@ -107,17 +118,25 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 mt-1">
+          {needed > 0 && (
+            <p className="text-xs text-muted-foreground mb-2.5">
+              {members.length === 0
+                ? "Add at least 2 members to create a group."
+                : "Add 1 more member to continue."}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3 mt-1">
             <button
               onClick={handleCancel}
-              className="text-sm font-medium text-muted-foreground active:scale-95 transition-transform"
+              className="text-sm font-medium text-muted-foreground py-1 active:scale-95 transition-transform"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={!groupName.trim() || members.length < 2}
-              className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
+              className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
             >
               Create Group
             </button>
@@ -145,41 +164,43 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
                 : "bg-card border border-border"
             }`}
           >
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm mr-3 flex-shrink-0 ${
               activeGroupId === group.id ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
             }`}>
               {group.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm truncate">{group.name}</p>
-              <p className={`text-xs mt-0.5 ${activeGroupId === group.id ? "text-white/70" : "text-muted-foreground"}`}>
-                {group.members.length} members: {group.members.map(m => m.name).join(", ")}
+              <p className={`text-xs mt-0.5 truncate ${activeGroupId === group.id ? "text-white/70" : "text-muted-foreground"}`}>
+                {group.members.length} members · {group.members.map(m => m.name).join(", ")}
               </p>
             </div>
             {deleteId === group.id ? (
-              <div className="flex gap-2 ml-2" onClick={e => e.stopPropagation()}>
+              <div className="flex gap-2 ml-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => onDelete(group.id)}
-                  className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded-lg font-semibold active:scale-95 transition-transform"
+                  className="text-xs bg-destructive text-destructive-foreground px-2.5 py-1.5 rounded-lg font-semibold active:scale-95 transition-transform"
                 >
                   Delete
                 </button>
                 <button
                   onClick={() => setDeleteId(null)}
-                  className="text-xs bg-white/20 px-2 py-1 rounded-lg font-semibold active:scale-95 transition-transform"
+                  className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold active:scale-95 transition-transform ${
+                    activeGroupId === group.id ? "bg-white/20 text-white" : "bg-secondary text-secondary-foreground"
+                  }`}
                 >
-                  Cancel
+                  No
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                 <button
                   onClick={e => { e.stopPropagation(); setDeleteId(group.id); }}
                   className={`p-1.5 rounded-lg active:scale-95 transition-transform ${
-                    activeGroupId === group.id ? "bg-white/20" : "bg-destructive/10"
+                    activeGroupId === group.id ? "bg-white/20" : "bg-secondary"
                   }`}
                 >
-                  <Trash2 size={14} className={activeGroupId === group.id ? "text-white" : "text-destructive"} />
+                  <Trash2 size={14} className={activeGroupId === group.id ? "text-white/80" : "text-muted-foreground"} />
                 </button>
                 <ChevronRight size={16} className={activeGroupId === group.id ? "text-white/60" : "text-muted-foreground"} />
               </div>

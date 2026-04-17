@@ -33,49 +33,56 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-4">
       <div className="px-4 pt-3 pb-2">
-        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{group.name} — Result</span>
+        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{group.name} — Result</p>
       </div>
 
+      {/* Summary card */}
       <div className="px-4 mb-3">
-        <div className="bg-gradient-to-br from-primary to-purple-700 rounded-2xl p-4 text-white shadow-lg">
-          <p className="text-xs font-medium opacity-80 mb-1">Total Expenses</p>
-          <div className="flex items-baseline gap-1 mb-3">
-            <IndianRupee size={20} className="mb-0.5" />
+        <div className="bg-gradient-to-br from-primary to-emerald-700 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-xs font-medium opacity-75 mb-1">Total Expenses</p>
+          <div className="flex items-baseline gap-0.5 mb-3">
+            <span className="text-lg font-semibold opacity-80">₹</span>
             <span className="text-3xl font-bold">{total.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs opacity-70">Per person</p>
-              <p className="text-sm font-semibold">₹{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
+              <p className="text-sm font-bold">₹{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
             </div>
             <div>
               <p className="text-xs opacity-70">Members</p>
-              <p className="text-sm font-semibold">{group.members.length}</p>
+              <p className="text-sm font-bold">{group.members.length}</p>
             </div>
             <div>
               <p className="text-xs opacity-70">Expenses</p>
-              <p className="text-sm font-semibold">{expenses.length}</p>
+              <p className="text-sm font-bold">{expenses.length}</p>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Per-person breakdown */}
       <div className="px-4 mb-3">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">What each person paid</p>
         <div className="space-y-2">
           {group.members.map(m => {
             const paid = memberPaid[m.id] ?? 0;
             const diff = paid - perPerson;
+            const isAhead = diff >= -0.005;
             return (
               <div key={m.id} className="flex items-center bg-card border border-border rounded-xl px-3 py-2.5 shadow-sm">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center mr-3 flex-shrink-0">
                   {m.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="flex-1 text-sm font-medium">{m.name}</span>
+                <span className="flex-1 text-sm font-medium truncate">{m.name}</span>
                 <div className="text-right">
                   <p className="text-sm font-bold">₹{paid.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
-                  <p className={`text-xs font-medium ${diff >= 0 ? "text-emerald-500" : "text-destructive"}`}>
-                    {diff >= 0 ? `+₹${diff.toFixed(2)} ahead` : `-₹${Math.abs(diff).toFixed(2)} behind`}
+                  <p className={`text-xs font-medium ${isAhead ? "text-primary" : "text-destructive"}`}>
+                    {Math.abs(diff) < 0.005
+                      ? "settled"
+                      : isAhead
+                        ? `+₹${diff.toFixed(2)} ahead`
+                        : `-₹${Math.abs(diff).toFixed(2)} behind`}
                   </p>
                 </div>
               </div>
@@ -84,14 +91,13 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
         </div>
       </div>
 
+      {/* Settlements */}
       <div className="px-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Who pays whom
-        </p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Who pays whom</p>
         {settlements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 bg-card border border-border rounded-2xl">
-            <CheckCircle2 size={32} className="text-emerald-500 mb-2" />
-            <p className="font-semibold text-sm text-emerald-600">All settled up!</p>
+            <CheckCircle2 size={32} className="text-primary mb-2" />
+            <p className="font-semibold text-sm text-primary">All settled up!</p>
             <p className="text-xs text-muted-foreground mt-1">
               {expenses.length === 0 ? "No expenses added yet" : "Everyone owes the same amount"}
             </p>
@@ -100,22 +106,20 @@ export default function ResultPage({ group, settlements, expenses, getMemberName
           <div className="space-y-2">
             {settlements.map((s, i) => (
               <div key={i} className="flex items-center bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
-                <div className="w-8 h-8 rounded-full bg-destructive/10 text-destructive text-xs font-bold flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {getMemberName(group.id, s.from).charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1 mx-3">
+                <div className="flex-1 mx-3 min-w-0">
                   <div className="flex items-center gap-1.5 text-sm">
-                    <span className="font-semibold truncate max-w-[70px]">{getMemberName(group.id, s.from)}</span>
-                    <ArrowRight size={14} className="text-muted-foreground flex-shrink-0" />
-                    <span className="font-semibold truncate max-w-[70px]">{getMemberName(group.id, s.to)}</span>
+                    <span className="font-semibold truncate max-w-[65px]">{getMemberName(group.id, s.from)}</span>
+                    <ArrowRight size={13} className="text-muted-foreground flex-shrink-0" />
+                    <span className="font-semibold truncate max-w-[65px]">{getMemberName(group.id, s.to)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">needs to pay</p>
+                  <p className="text-xs text-muted-foreground">needs to pay</p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-base font-bold text-primary">
-                    ₹{s.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                  </p>
-                </div>
+                <p className="text-base font-bold text-primary flex-shrink-0">
+                  ₹{s.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                </p>
               </div>
             ))}
           </div>
