@@ -78,7 +78,9 @@ export default function App() {
             activeGroupId={store.activeGroupId}
             onSelect={id => { store.setActiveGroupId(id); setTab("add"); }}
             onCreate={(name, members) => { store.createGroup(name, members); setTab("add"); }}
+            onUpdate={store.updateGroup}
             onDelete={store.deleteGroup}
+            generateShareText={store.generateShareText}
           />
         )}
         {tab === "add" && (

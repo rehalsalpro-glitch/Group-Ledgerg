@@ -65,6 +65,17 @@ export function useStore() {
     return group;
   }
 
+  function updateGroup(id: string, name: string, memberNames: string[]) {
+    setGroups(prev => prev.map(g => {
+      if (g.id !== id) return g;
+      const newMembers: Member[] = memberNames.filter(n => n.trim()).map(n => {
+        const existing = g.members.find(m => m.name.toLowerCase() === n.trim().toLowerCase());
+        return existing ?? { id: uid(), name: n.trim() };
+      });
+      return { ...g, name: name.trim(), members: newMembers };
+    }));
+  }
+
   function deleteGroup(id: string) {
     setGroups(prev => prev.filter(g => g.id !== id));
     setExpenses(prev => prev.filter(e => e.groupId !== id));
@@ -116,22 +127,14 @@ export function useStore() {
     debtors.sort((a, b) => b.amount - a.amount);
 
     const settlements: Settlement[] = [];
-
     let ci = 0, di = 0;
     while (ci < creditors.length && di < debtors.length) {
       const c = creditors[ci];
       const d = debtors[di];
       const amt = Math.min(c.amount, d.amount);
-
-      settlements.push({
-        from: d.id,
-        to: c.id,
-        amount: Math.round(amt * 100) / 100,
-      });
-
+      settlements.push({ from: d.id, to: c.id, amount: Math.round(amt * 100) / 100 });
       c.amount -= amt;
       d.amount -= amt;
-
       if (c.amount < 0.005) ci++;
       if (d.amount < 0.005) di++;
     }
@@ -141,7 +144,43 @@ export function useStore() {
 
   function getMemberName(groupId: string, memberId: string) {
     const group = groups.find(g => g.id === groupId);
-    return group?.members.find(m => m.id === memberId)?.name ?? memberId;
+    return group?.members.find(m => m.id === memberId)?.name ?? "Unknown";
+  }
+
+  function generateShareText(groupId: string): string {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return "";
+    const exps = getGroupExpenses(groupId);
+    const total = exps.reduce((s, e) => s + e.amount, 0);
+    const perPerson = group.members.length > 0 ? total / group.members.length : 0;
+
+    let text = `*${group.name} – Expense Summary*\n`;
+    text += `Members: ${group.members.map(m => m.name).join(", ")}\n\n`;
+    text += `*Total:* ₹${total.toFixed(2)}\n`;
+    text += `*Per person:* ₹${perPerson.toFixed(2)}\n`;
+
+    if (exps.length > 0) {
+      text += `\n*Expenses:*\n`;
+      exps.forEach(e => {
+        const payer = group.members.find(m => m.id === e.paidBy)?.name ?? "Unknown";
+        text += `• ${e.title}: ₹${e.amount.toFixed(2)} (paid by ${payer})\n`;
+      });
+    }
+
+    const settlements = calculateSettlements(groupId);
+    if (settlements.length > 0) {
+      text += `\n*Who pays whom:*\n`;
+      settlements.forEach(s => {
+        const from = group.members.find(m => m.id === s.from)?.name ?? "Unknown";
+        const to = group.members.find(m => m.id === s.to)?.name ?? "Unknown";
+        text += `• ${from} → ${to}: ₹${s.amount.toFixed(2)}\n`;
+      });
+    } else {
+      text += `\n✅ All settled up!\n`;
+    }
+
+    text += `\n_Shared via SplitKaro_`;
+    return text;
   }
 
   return {
@@ -151,11 +190,13 @@ export function useStore() {
     activeGroup,
     setActiveGroupId,
     createGroup,
+    updateGroup,
     deleteGroup,
     addExpense,
     deleteExpense,
     getGroupExpenses,
     calculateSettlements,
     getMemberName,
+    generateShareText,
   };
 }
