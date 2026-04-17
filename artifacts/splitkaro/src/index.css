@@ -33,16 +33,16 @@
   --foreground: 240 10% 10%;
   --border: 240 8% 88%;
   --input: 240 8% 88%;
-  --ring: 262 83% 58%;
+  --ring: 142 71% 45%;
   --card: 0 0% 100%;
   --card-foreground: 240 10% 10%;
-  --primary: 262 83% 58%;
+  --primary: 142 71% 45%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 5% 92%;
   --secondary-foreground: 240 10% 20%;
   --muted: 240 5% 94%;
   --muted-foreground: 240 5% 52%;
-  --accent: 340 80% 60%;
+  --accent: 142 60% 92%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
@@ -74,4 +74,14 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.85); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: pop-in 160ms ease-out;
 }

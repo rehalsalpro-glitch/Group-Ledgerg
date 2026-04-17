@@ -59,18 +59,17 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
       </div>
 
       {creating && (
-        <div className="mx-4 mb-3 p-4 rounded-2xl bg-card border border-border shadow-sm">
-          <p className="text-sm font-semibold mb-3">Create a new group</p>
+        <div className="mx-4 mb-3 p-3 rounded-2xl bg-card border border-border shadow-sm max-w-[92%]">
+          <p className="text-sm font-semibold mb-2">Create a new group</p>
 
           <input
             autoFocus
-            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-3 bg-background outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Group name (e.g. Goa Trip)"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-2 bg-background outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Group name"
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
           />
 
-          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Members</label>
           <div className="flex gap-2 mb-2">
             <input
               ref={memberInputRef}
@@ -90,11 +89,11 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
           </div>
 
           {members.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               {members.map((name, i) => (
                 <span
                   key={i}
-                  className="flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded-full"
+                  className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded-full"
                 >
                   {name}
                   <button
@@ -108,25 +107,19 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             </div>
           )}
 
-          {members.length < 2 && (
-            <p className="text-xs text-muted-foreground mb-3">
-              {members.length === 0 ? "Add at least 2 members to continue." : "Add 1 more member to continue."}
-            </p>
-          )}
-
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between gap-3 mt-1">
+            <button
+              onClick={handleCancel}
+              className="text-sm font-medium text-muted-foreground active:scale-95 transition-transform"
+            >
+              Cancel
+            </button>
             <button
               onClick={handleCreate}
               disabled={!groupName.trim() || members.length < 2}
               className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
             >
               Create Group
-            </button>
-            <button
-              onClick={handleCancel}
-              className="flex-1 bg-secondary text-secondary-foreground text-sm font-semibold py-2 rounded-xl active:scale-95 transition-transform"
-            >
-              Cancel
             </button>
           </div>
         </div>
