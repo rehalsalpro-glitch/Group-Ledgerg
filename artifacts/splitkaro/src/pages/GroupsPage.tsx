@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Users, Plus, Trash2, ChevronRight } from "lucide-react";
+import { useState, useRef } from "react";
+import { Users, Plus, Trash2, ChevronRight, UserPlus, X } from "lucide-react";
 import type { Group } from "../store";
 
 interface Props {
@@ -13,17 +13,37 @@ interface Props {
 export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, onDelete }: Props) {
   const [creating, setCreating] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [membersRaw, setMembersRaw] = useState("");
+  const [members, setMembers] = useState<string[]>([]);
+  const [memberInput, setMemberInput] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const memberInputRef = useRef<HTMLInputElement>(null);
+
+  function handleAddMember() {
+    const name = memberInput.trim();
+    if (!name) return;
+    setMembers(prev => [...prev, name]);
+    setMemberInput("");
+    memberInputRef.current?.focus();
+  }
+
+  function handleRemoveMember(index: number) {
+    setMembers(prev => prev.filter((_, i) => i !== index));
+  }
 
   function handleCreate() {
-    if (!groupName.trim()) return;
-    const members = membersRaw.split(",").map(s => s.trim()).filter(Boolean);
-    if (members.length < 2) return;
+    if (!groupName.trim() || members.length < 2) return;
     onCreate(groupName.trim(), members);
     setGroupName("");
-    setMembersRaw("");
+    setMembers([]);
+    setMemberInput("");
     setCreating(false);
+  }
+
+  function handleCancel() {
+    setCreating(false);
+    setGroupName("");
+    setMembers([]);
+    setMemberInput("");
   }
 
   return (
@@ -41,30 +61,69 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
       {creating && (
         <div className="mx-4 mb-3 p-4 rounded-2xl bg-card border border-border shadow-sm">
           <p className="text-sm font-semibold mb-3">Create a new group</p>
+
           <input
             autoFocus
-            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-2 bg-background outline-none focus:ring-2 focus:ring-primary"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-3 bg-background outline-none focus:ring-2 focus:ring-primary"
             placeholder="Group name (e.g. Goa Trip)"
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
           />
-          <input
-            className="w-full border border-border rounded-xl px-3 py-2 text-sm mb-3 bg-background outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Members (comma-separated)"
-            value={membersRaw}
-            onChange={e => setMembersRaw(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground mb-3">Separate names with commas. Minimum 2 members.</p>
+
+          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Members</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              ref={memberInputRef}
+              className="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Enter member name"
+              value={memberInput}
+              onChange={e => setMemberInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddMember(); } }}
+            />
+            <button
+              onClick={handleAddMember}
+              disabled={!memberInput.trim()}
+              className="flex items-center gap-1 bg-primary/10 text-primary text-sm font-semibold px-3 py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
+            >
+              <UserPlus size={14} /> Add
+            </button>
+          </div>
+
+          {members.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {members.map((name, i) => (
+                <span
+                  key={i}
+                  className="flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded-full"
+                >
+                  {name}
+                  <button
+                    onClick={() => handleRemoveMember(i)}
+                    className="ml-0.5 hover:text-destructive transition-colors"
+                  >
+                    <X size={11} strokeWidth={2.5} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {members.length < 2 && (
+            <p className="text-xs text-muted-foreground mb-3">
+              {members.length === 0 ? "Add at least 2 members to continue." : "Add 1 more member to continue."}
+            </p>
+          )}
+
           <div className="flex gap-2">
             <button
               onClick={handleCreate}
-              disabled={!groupName.trim() || membersRaw.split(",").filter(s => s.trim()).length < 2}
+              disabled={!groupName.trim() || members.length < 2}
               className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
             >
-              Create
+              Create Group
             </button>
             <button
-              onClick={() => { setCreating(false); setGroupName(""); setMembersRaw(""); }}
+              onClick={handleCancel}
               className="flex-1 bg-secondary text-secondary-foreground text-sm font-semibold py-2 rounded-xl active:scale-95 transition-transform"
             >
               Cancel
