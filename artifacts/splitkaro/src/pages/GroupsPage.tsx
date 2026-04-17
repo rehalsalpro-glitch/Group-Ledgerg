@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Users, Plus, Trash2, UserPlus, X, MoreVertical, Pencil, Share2, Check, Copy } from "lucide-react";
+import { Users, Plus, Trash2, X, MoreVertical, Pencil, Share2, Check, Copy } from "lucide-react";
 import type { Group } from "../store";
 
 interface Props {
@@ -214,9 +214,9 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
               <button
                 onClick={handleAddEditMember}
                 disabled={!editMemberInput.trim()}
-                className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3.5 py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
+                className="flex items-center gap-1 bg-primary text-primary-foreground text-xs font-semibold px-3 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
               >
-                <UserPlus size={14} /> Add
+                <Plus size={12} strokeWidth={2.5} /> Add
               </button>
             </div>
 
@@ -342,9 +342,9 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             <button
               onClick={handleAddMember}
               disabled={!memberInput.trim()}
-              className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3.5 py-2 rounded-xl active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
+              className="flex items-center gap-1 bg-primary text-primary-foreground text-xs font-semibold px-3 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
             >
-              <UserPlus size={14} /> Add
+              <Plus size={12} strokeWidth={2.5} /> Add
             </button>
           </div>
 
