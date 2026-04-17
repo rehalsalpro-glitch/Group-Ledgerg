@@ -14,14 +14,10 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
 
   const store = useStore();
-  const { currencySymbol } = useSettings();
+  const { t } = useSettings();
 
-  const groupExpenses = store.activeGroup
-    ? store.getGroupExpenses(store.activeGroup.id)
-    : [];
-  const settlements = store.activeGroup
-    ? store.calculateSettlements(store.activeGroup.id)
-    : [];
+  const groupExpenses = store.activeGroup ? store.getGroupExpenses(store.activeGroup.id) : [];
+  const settlements   = store.activeGroup ? store.calculateSettlements(store.activeGroup.id) : [];
 
   if (showSettings) {
     return (
@@ -71,12 +67,11 @@ export default function App() {
           <AddExpensePage
             group={store.activeGroup}
             expenses={groupExpenses}
-            currencySymbol={currencySymbol}
             onAdd={(title, amount, paidBy) => {
               if (store.activeGroup) store.addExpense(store.activeGroup.id, title, amount, paidBy);
             }}
             onDelete={store.deleteExpense}
-            getMemberName={(groupId, memberId) => store.getMemberName(groupId, memberId)}
+            getMemberName={(gId, mId) => store.getMemberName(gId, mId)}
           />
         )}
         {tab === "result" && (
@@ -84,8 +79,7 @@ export default function App() {
             group={store.activeGroup}
             settlements={settlements}
             expenses={groupExpenses}
-            currencySymbol={currencySymbol}
-            getMemberName={(groupId, memberId) => store.getMemberName(groupId, memberId)}
+            getMemberName={(gId, mId) => store.getMemberName(gId, mId)}
           />
         )}
       </main>
@@ -93,10 +87,10 @@ export default function App() {
       {/* Bottom Navigation */}
       <nav className="flex-shrink-0 bg-white dark:bg-card border-t border-border px-2 py-2 pb-safe flex items-center gap-1 shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
         {([
-          { id: "add" as Tab, label: "Add Expense", icon: PlusCircle },
-          { id: "groups" as Tab, label: "Groups", icon: Users },
-          { id: "result" as Tab, label: "Result", icon: TrendingUp },
-        ] as const).map(({ id, label, icon: Icon }) => (
+          { id: "add"    as Tab, labelKey: "addExpense" as const, icon: PlusCircle },
+          { id: "groups" as Tab, labelKey: "groups"     as const, icon: Users      },
+          { id: "result" as Tab, labelKey: "result"     as const, icon: TrendingUp },
+        ]).map(({ id, labelKey, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -106,7 +100,7 @@ export default function App() {
           >
             <Icon size={20} strokeWidth={tab === id ? 2.5 : 1.8} />
             <span className={`text-[10px] font-semibold leading-tight ${tab === id ? "text-primary" : ""}`}>
-              {label}
+              {t(labelKey)}
             </span>
           </button>
         ))}

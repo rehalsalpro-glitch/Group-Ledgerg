@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { IndianRupee, Receipt, Trash2 } from "lucide-react";
+import { useSettings } from "../useSettings";
 import type { Group, Expense } from "../store";
 
 interface Props {
   group: Group | null;
   expenses: Expense[];
-  currencySymbol: string;
   onAdd: (title: string, amount: number, paidBy: string) => void;
   onDelete: (id: string) => void;
   getMemberName: (groupId: string, memberId: string) => string;
 }
 
-export default function AddExpensePage({ group, expenses, currencySymbol, onAdd, onDelete, getMemberName }: Props) {
+export default function AddExpensePage({ group, expenses, onAdd, onDelete, getMemberName }: Props) {
+  const { currencySymbol, t } = useSettings();
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState(group?.members[0]?.id ?? "");
@@ -22,8 +23,8 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
           <Receipt size={28} className="text-primary" />
         </div>
-        <p className="font-semibold text-base">No group selected</p>
-        <p className="text-sm text-muted-foreground mt-1">Go to Groups and select or create a group first</p>
+        <p className="font-semibold text-base">{t("noGroupSelected")}</p>
+        <p className="text-sm text-muted-foreground mt-1">{t("goToGroups")}</p>
       </div>
     );
   }
@@ -48,7 +49,7 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
         <div>
           <p className="text-sm font-semibold text-foreground">{group.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {group.members.length} members · {currencySymbol}{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })} each
+            {group.members.length} {t("members")} · {currencySymbol}{perPerson.toLocaleString("en-IN", { maximumFractionDigits: 2 })} {t("each")}
           </p>
         </div>
         <div className="flex items-center gap-1 bg-primary/10 text-primary text-sm font-bold px-3 py-1.5 rounded-full">
@@ -60,10 +61,10 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
       {/* Add form */}
       <div className="px-4 pb-3">
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <p className="text-sm font-semibold mb-3">Add Expense</p>
+          <p className="text-sm font-semibold mb-3">{t("addExpense")}</p>
           <input
             className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-2 bg-background outline-none focus:ring-2 focus:ring-primary"
-            placeholder="What's this for? (e.g. Dinner)"
+            placeholder={t("whatFor")}
             value={title}
             onChange={e => setTitle(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleAdd(); }}
@@ -74,14 +75,14 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
               type="number"
               inputMode="decimal"
               className="w-full border border-border rounded-xl pl-8 pr-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Amount"
+              placeholder={t("amount")}
               value={amount}
               onChange={e => setAmount(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleAdd(); }}
             />
           </div>
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground mb-1.5 block font-semibold">Paid by</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block font-semibold">{t("paidBy")}</label>
             <div className="flex flex-wrap gap-2">
               {group.members.map(m => (
                 <button
@@ -103,7 +104,7 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
             disabled={!title.trim() || !amount || Number(amount) <= 0 || !effectivePaidBy}
             className="w-full bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
           >
-            Add Expense
+            {t("addExpense")}
           </button>
         </div>
       </div>
@@ -111,12 +112,10 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
       {/* Expense list */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Expenses ({expenses.length})
+          {t("expenses")} ({expenses.length})
         </p>
         {expenses.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm">
-            No expenses yet. Add one above.
-          </div>
+          <div className="text-center py-10 text-muted-foreground text-sm">{t("noExpensesYet")}</div>
         )}
         <div className="space-y-2">
           {expenses.map(exp => (
@@ -127,17 +126,14 @@ export default function AddExpensePage({ group, expenses, currencySymbol, onAdd,
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate">{exp.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Paid by <span className="font-medium text-foreground">{getMemberName(exp.groupId, exp.paidBy)}</span>
+                  {t("paidBy")} <span className="font-medium text-foreground">{getMemberName(exp.groupId, exp.paidBy)}</span>
                 </p>
               </div>
-              <div className="text-right ml-2 flex items-center gap-2">
+              <div className="ml-2 flex items-center gap-2">
                 <p className="text-sm font-bold text-primary">
                   {currencySymbol}{exp.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                 </p>
-                <button
-                  onClick={() => onDelete(exp.id)}
-                  className="p-1.5 rounded-lg bg-destructive/10 active:scale-95 transition-transform"
-                >
+                <button onClick={() => onDelete(exp.id)} className="p-1.5 rounded-lg bg-destructive/10 active:scale-95 transition-transform">
                   <Trash2 size={13} className="text-destructive" />
                 </button>
               </div>

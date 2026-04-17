@@ -1,63 +1,65 @@
 import { ArrowRight, CheckCircle2, TrendingUp } from "lucide-react";
+import { useSettings } from "../useSettings";
 import type { Group, Settlement, Expense } from "../store";
 
 interface Props {
   group: Group | null;
   settlements: Settlement[];
   expenses: Expense[];
-  currencySymbol: string;
   getMemberName: (groupId: string, memberId: string) => string;
 }
 
-export default function ResultPage({ group, settlements, expenses, currencySymbol, getMemberName }: Props) {
+export default function ResultPage({ group, settlements, expenses, getMemberName }: Props) {
+  const { currencySymbol, t } = useSettings();
+
+  const fmt = (n: number) => `${currencySymbol}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
   if (!group) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-8">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
           <TrendingUp size={28} className="text-primary" />
         </div>
-        <p className="font-semibold text-base">No group selected</p>
-        <p className="text-sm text-muted-foreground mt-1">Select a group from the Groups tab to see results</p>
+        <p className="font-semibold text-base">{t("noGroupSelected")}</p>
+        <p className="text-sm text-muted-foreground mt-1">{t("selectGroupFirst")}</p>
       </div>
     );
   }
-
-  const fmt = (n: number) => `${currencySymbol}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const perPerson = group.members.length > 0 ? total / group.members.length : 0;
 
   const memberPaid: Record<string, number> = {};
   group.members.forEach(m => { memberPaid[m.id] = 0; });
-  expenses.forEach(e => {
-    if (memberPaid[e.paidBy] !== undefined) memberPaid[e.paidBy] += e.amount;
-  });
+  expenses.forEach(e => { if (memberPaid[e.paidBy] !== undefined) memberPaid[e.paidBy] += e.amount; });
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-4">
       <div className="px-4 pt-3 pb-2">
-        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{group.name} — Result</p>
+        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          {group.name} — {t("result")}
+        </p>
       </div>
 
       {/* Summary card */}
       <div className="px-4 mb-3">
         <div className="bg-gradient-to-br from-primary to-emerald-700 rounded-2xl p-4 text-white shadow-lg">
-          <p className="text-xs font-medium opacity-75 mb-1">Total Expenses</p>
+          <p className="text-xs font-medium opacity-75 mb-1">{t("totalExpenses")}</p>
           <div className="flex items-baseline gap-0.5 mb-3">
             <span className="text-lg font-semibold opacity-80">{currencySymbol}</span>
             <span className="text-3xl font-bold">{total.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs opacity-70">Per person</p>
+              <p className="text-xs opacity-70">{t("perPerson")}</p>
               <p className="text-sm font-bold">{fmt(perPerson)}</p>
             </div>
             <div>
-              <p className="text-xs opacity-70">Members</p>
+              <p className="text-xs opacity-70">{t("members")}</p>
               <p className="text-sm font-bold">{group.members.length}</p>
             </div>
             <div>
-              <p className="text-xs opacity-70">Expenses</p>
+              <p className="text-xs opacity-70">{t("expenses")}</p>
               <p className="text-sm font-bold">{expenses.length}</p>
             </div>
           </div>
@@ -66,7 +68,7 @@ export default function ResultPage({ group, settlements, expenses, currencySymbo
 
       {/* Per-person breakdown */}
       <div className="px-4 mb-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">What each person paid</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("whatEachPaid")}</p>
         <div className="space-y-2">
           {group.members.map(m => {
             const paid = memberPaid[m.id] ?? 0;
@@ -82,10 +84,10 @@ export default function ResultPage({ group, settlements, expenses, currencySymbo
                   <p className="text-sm font-bold">{fmt(paid)}</p>
                   <p className={`text-xs font-medium ${isAhead ? "text-primary" : "text-destructive"}`}>
                     {Math.abs(diff) < 0.005
-                      ? "settled"
+                      ? t("settled")
                       : isAhead
-                        ? `+${fmt(diff)} ahead`
-                        : `-${fmt(Math.abs(diff))} behind`}
+                        ? `+${fmt(diff)} ${t("ahead")}`
+                        : `-${fmt(Math.abs(diff))} ${t("behind")}`}
                   </p>
                 </div>
               </div>
@@ -96,13 +98,13 @@ export default function ResultPage({ group, settlements, expenses, currencySymbo
 
       {/* Settlements */}
       <div className="px-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Who pays whom</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("whoOwes")}</p>
         {settlements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 bg-card border border-border rounded-2xl">
             <CheckCircle2 size={32} className="text-primary mb-2" />
-            <p className="font-semibold text-sm text-primary">All settled up!</p>
+            <p className="font-semibold text-sm text-primary">{t("allSettledUp")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {expenses.length === 0 ? "No expenses added yet" : "Everyone owes the same amount"}
+              {expenses.length === 0 ? t("noExpensesAdded") : t("everyoneOwes")}
             </p>
           </div>
         ) : (
@@ -118,7 +120,7 @@ export default function ResultPage({ group, settlements, expenses, currencySymbo
                     <ArrowRight size={13} className="text-muted-foreground flex-shrink-0" />
                     <span className="font-semibold truncate max-w-[65px]">{getMemberName(group.id, s.to)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">needs to pay</p>
+                  <p className="text-xs text-muted-foreground">{t("needsToPay")}</p>
                 </div>
                 <p className="text-base font-bold text-primary flex-shrink-0">{fmt(s.amount)}</p>
               </div>

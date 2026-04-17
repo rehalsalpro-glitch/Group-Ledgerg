@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Users, Plus, Trash2, X, MoreVertical, Pencil, Share2, Check, Copy } from "lucide-react";
+import { useSettings } from "../useSettings";
 import type { Group } from "../store";
 
 interface Props {
@@ -12,15 +13,14 @@ interface Props {
   generateShareText: (groupId: string) => string;
 }
 
-interface MemberEntry {
-  key: string;
-  name: string;
-}
+interface MemberEntry { key: string; name: string; }
 
 let counter = 0;
 function mkKey() { return `m-${++counter}-${Date.now()}`; }
 
 export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, onUpdate, onDelete, generateShareText }: Props) {
+  const { t } = useSettings();
+
   // ── Create form ──────────────────────────────────────────────
   const [creating, setCreating] = useState(false);
   const [groupName, setGroupName] = useState("");
@@ -108,8 +108,6 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       const el = document.createElement("textarea");
       el.value = shareText;
@@ -117,9 +115,9 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
       el.select();
       document.execCommand("copy");
       document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   function handleWhatsApp() {
@@ -146,26 +144,26 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
                   onClick={() => { const g = groups.find(x => x.id === menuOpenId); if (g) openEdit(g); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary active:bg-secondary transition-colors"
                 >
-                  <Pencil size={15} className="text-muted-foreground" /> Edit Group
+                  <Pencil size={15} className="text-muted-foreground" /> {t("editGroup")}
                 </button>
                 <button
-                  onClick={() => { openShare(menuOpenId); }}
+                  onClick={() => openShare(menuOpenId)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary active:bg-secondary transition-colors"
                 >
-                  <Share2 size={15} className="text-muted-foreground" /> Share Group
+                  <Share2 size={15} className="text-muted-foreground" /> {t("shareApp")}
                 </button>
                 <div className="my-1 border-t border-border" />
                 <button
                   onClick={() => setMenuPhase("deleteConfirm")}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 active:bg-destructive/10 transition-colors"
                 >
-                  <Trash2 size={15} /> Delete Group
+                  <Trash2 size={15} /> {t("groups")}…
                 </button>
               </>
             ) : (
               <div className="px-4 py-3">
                 <p className="text-sm font-semibold text-foreground mb-1">Delete group?</p>
-                <p className="text-xs text-muted-foreground mb-3">This will also delete all expenses. This can't be undone.</p>
+                <p className="text-xs text-muted-foreground mb-3">All expenses will be removed. This can't be undone.</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { onDelete(menuOpenId); closeMenu(); }}
@@ -177,7 +175,7 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
                     onClick={() => setMenuPhase("main")}
                     className="flex-1 bg-secondary text-secondary-foreground text-xs font-semibold py-2 rounded-xl active:scale-95 transition-transform"
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </div>
@@ -191,12 +189,12 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
         <>
           <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setEditingGroup(null)} />
           <div className="fixed inset-x-4 top-24 z-50 bg-card border border-border rounded-2xl shadow-xl p-4 max-w-sm mx-auto">
-            <p className="text-sm font-semibold mb-3">Edit Group</p>
+            <p className="text-sm font-semibold mb-3">{t("editGroup")}</p>
 
             <input
               autoFocus
               className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-2.5 bg-background outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Group name"
+              placeholder={t("groupName")}
               value={editName}
               onChange={e => setEditName(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") editMemberInputRef.current?.focus(); }}
@@ -206,7 +204,7 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
               <input
                 ref={editMemberInputRef}
                 className="flex-1 border border-border rounded-xl px-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Add member name"
+                placeholder={t("addMemberName")}
                 value={editMemberInput}
                 onChange={e => setEditMemberInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddEditMember(); } }}
@@ -223,15 +221,9 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             {editMembers.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2.5">
                 {editMembers.map(m => (
-                  <span
-                    key={m.key}
-                    className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 rounded-full"
-                  >
+                  <span key={m.key} className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 rounded-full">
                     {m.name}
-                    <button
-                      onClick={() => setEditMembers(prev => prev.filter(em => em.key !== m.key))}
-                      className="ml-0.5 opacity-60 hover:opacity-100 hover:text-destructive transition-all"
-                    >
+                    <button onClick={() => setEditMembers(prev => prev.filter(em => em.key !== m.key))} className="ml-0.5 opacity-60 hover:opacity-100 hover:text-destructive transition-all">
                       <X size={11} strokeWidth={2.5} />
                     </button>
                   </span>
@@ -241,23 +233,20 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
 
             {editNeeded > 0 && (
               <p className="text-xs text-muted-foreground mb-2.5">
-                {editMembers.length === 0 ? "Add at least 2 members." : "Add 1 more member to continue."}
+                {editMembers.length === 0 ? t("addMemberHint2") : t("addMemberHint1")}
               </p>
             )}
 
             <div className="flex items-center gap-3 mt-1">
-              <button
-                onClick={() => setEditingGroup(null)}
-                className="text-sm font-medium text-muted-foreground py-1 active:scale-95 transition-transform"
-              >
-                Cancel
+              <button onClick={() => setEditingGroup(null)} className="text-sm font-medium text-muted-foreground py-1 active:scale-95 transition-transform">
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={!editName.trim() || editMembers.length < 2}
                 className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
               >
-                Save Changes
+                {t("saveChanges")}
               </button>
             </div>
           </div>
@@ -270,19 +259,14 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
           <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setShareText("")} />
           <div className="fixed inset-x-4 bottom-24 z-50 bg-card border border-border rounded-2xl shadow-xl p-4 max-w-sm mx-auto">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold">Share Summary</p>
-              <button
-                onClick={() => setShareText("")}
-                className="p-1 rounded-lg bg-secondary active:scale-90 transition-transform"
-              >
+              <p className="text-sm font-semibold">{t("shareSummary")}</p>
+              <button onClick={() => setShareText("")} className="p-1 rounded-lg bg-secondary active:scale-90 transition-transform">
                 <X size={14} className="text-muted-foreground" />
               </button>
             </div>
-
             <div className="bg-background border border-border rounded-xl p-3 mb-3 max-h-48 overflow-y-auto">
               <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{shareText}</pre>
             </div>
-
             <div className="flex gap-2">
               <button
                 onClick={handleCopy}
@@ -291,14 +275,13 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
                 }`}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? "Copied!" : "Copy"}
+                {copied ? t("copied") : t("copy")}
               </button>
               <button
                 onClick={handleWhatsApp}
                 className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white text-sm font-semibold py-2.5 rounded-xl active:scale-95 transition-transform"
               >
-                <Share2 size={14} />
-                WhatsApp
+                <Share2 size={14} /> {t("whatsapp")}
               </button>
             </div>
           </div>
@@ -307,24 +290,24 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Groups</span>
+        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("yourGroups")}</span>
         <button
           onClick={() => setCreating(true)}
           className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3 py-1.5 rounded-full shadow active:scale-95 transition-transform"
         >
-          <Plus size={14} /> New
+          <Plus size={14} /> {t("new")}
         </button>
       </div>
 
       {/* ── Create form ──────────────────────────────────────── */}
       {creating && (
         <div className="mx-4 mb-3 p-4 rounded-2xl bg-card border border-border shadow-sm">
-          <p className="text-sm font-semibold mb-3 text-foreground">Create a new group</p>
+          <p className="text-sm font-semibold mb-3 text-foreground">{t("createNewGroup")}</p>
 
           <input
             autoFocus
             className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-2.5 bg-background outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Group name (e.g. Goa Trip)"
+            placeholder={t("groupName")}
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") memberInputRef.current?.focus(); }}
@@ -334,7 +317,7 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             <input
               ref={memberInputRef}
               className="flex-1 border border-border rounded-xl px-3 py-2.5 text-sm bg-background outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Enter member name"
+              placeholder={t("enterMemberName")}
               value={memberInput}
               onChange={e => setMemberInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddMember(); } }}
@@ -351,15 +334,9 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
           {members.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-2.5">
               {members.map(m => (
-                <span
-                  key={m.key}
-                  className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 rounded-full"
-                >
+                <span key={m.key} className="animate-pop-in flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 rounded-full">
                   {m.name}
-                  <button
-                    onClick={() => setMembers(prev => prev.filter(em => em.key !== m.key))}
-                    className="ml-0.5 opacity-60 hover:opacity-100 hover:text-destructive transition-all"
-                  >
+                  <button onClick={() => setMembers(prev => prev.filter(em => em.key !== m.key))} className="ml-0.5 opacity-60 hover:opacity-100 hover:text-destructive transition-all">
                     <X size={11} strokeWidth={2.5} />
                   </button>
                 </span>
@@ -369,20 +346,20 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
 
           {needed > 0 && (
             <p className="text-xs text-muted-foreground mb-2.5">
-              {members.length === 0 ? "Add at least 2 members to create a group." : "Add 1 more member to continue."}
+              {members.length === 0 ? t("addMemberHint2") : t("addMemberHint1")}
             </p>
           )}
 
           <div className="flex items-center gap-3 mt-1">
             <button onClick={handleCancelCreate} className="text-sm font-medium text-muted-foreground py-1 active:scale-95 transition-transform">
-              Cancel
+              {t("cancel")}
             </button>
             <button
               onClick={handleCreate}
               disabled={!groupName.trim() || members.length < 2}
               className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
             >
-              Create Group
+              {t("createGroup")}
             </button>
           </div>
         </div>
@@ -395,8 +372,8 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Users size={28} className="text-primary" />
             </div>
-            <p className="font-semibold text-base">No groups yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Tap "New" to create your first group</p>
+            <p className="font-semibold text-base">{t("noGroupsYet")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("tapNewHint")}</p>
           </div>
         )}
 
@@ -405,9 +382,7 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             key={group.id}
             onClick={() => onSelect(group.id)}
             className={`relative flex items-center px-4 py-3.5 rounded-2xl cursor-pointer active:scale-[0.98] transition-all ${
-              activeGroupId === group.id
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-card border border-border"
+              activeGroupId === group.id ? "bg-primary text-primary-foreground shadow-md" : "bg-card border border-border"
             }`}
           >
             <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm mr-3 flex-shrink-0 ${
@@ -418,7 +393,7 @@ export default function GroupsPage({ groups, activeGroupId, onSelect, onCreate, 
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm truncate">{group.name}</p>
               <p className={`text-xs mt-0.5 truncate ${activeGroupId === group.id ? "text-white/70" : "text-muted-foreground"}`}>
-                {group.members.length} members · {group.members.map(m => m.name).join(", ")}
+                {group.members.length} {t("members")} · {group.members.map(m => m.name).join(", ")}
               </p>
             </div>
             <button
