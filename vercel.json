@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm --filter @workspace/splitkaro run build",
-  "outputDirectory": "artifacts/splitkaro/dist/public",
+  "outputDirectory": "artifacts/splitkaro/dist",
   "installCommand": "pnpm install",
   "framework": null,
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
